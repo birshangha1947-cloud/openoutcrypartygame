@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'username', 'handle', 'firm', 'rolePreference']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.username is string && data.username.size() > 0 && data.username.size() <= 100 &&
+        data.handle is string && data.handle.size() > 0 && data.handle.size() <= 10 &&
+        data.firm is string && data.firm.size() > 0 && data.firm.size() <= 100 &&
+        data.rolePreference in ['OPERATOR', 'BROKER', 'TRADER', 'PIT_OVERVIEW'];
+    }
+
+    function isValidRoom(data) {
+      return data.keys().hasAll(['id', 'code', 'name', 'hostName', 'hostId', 'maxParticipants', 'status']) &&
+        data.id is string && data.id.size() <= 128 &&
+        data.code is string && data.code.size() <= 30 &&
+        data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+        data.hostName is string && data.hostName.size() <= 100 &&
+        data.hostId is string && data.hostId.size() <= 128 &&
+        data.maxParticipants is number && data.maxParticipants >= 2 && data.maxParticipants <= 30 &&
+        data.status in ['LOBBY', 'TRADING', 'PAUSED', 'CLOSED'];
+    }
+
+    function isRoomParticipant(roomId) {
+      let room = get(/databases/$(database)/documents/rooms/$(roomId)).data;
+      return isSignedIn() &&
+        room.participantIds is list &&
+        request.auth.uid in room.participantIds;
+    }
+
+    function isValidRoomJoin() {
+      let oldParticipantIds = existing().get('participantIds', []);
+      return incoming().diff(existing()).affectedKeys().hasOnly([
+          'participants', 'participantIds', 'currentParticipantsCount'
+        ]) &&
+        oldParticipantIds is list &&
+        incoming().participantIds is list &&
+        incoming().participantIds.hasAll(oldParticipantIds) &&
+        incoming().participantIds.size() == oldParticipantIds.size() + 1 &&
+        request.auth.uid in incoming().participantIds &&
+        existing().participants is list &&
+        incoming().participants is list &&
+        incoming().participants.hasAll(existing().participants) &&
+        incoming().participants.size() == existing().participants.size() + 1 &&
+        incoming().participants[incoming().participants.size() - 1].id == request.auth.uid &&
+        incoming().participants.size() == incoming().currentParticipantsCount &&
+        incoming().currentParticipantsCount == existing().currentParticipantsCount + 1 &&
+        incoming().currentParticipantsCount <= incoming().maxParticipants;
+    }
+
+    // User profiles collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if false; // Disallow querying all users
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming()) && incoming().id == userId;
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidId(userId) && isValidUser(incoming()) && incoming().id == userId;
+      allow delete: if false;
+    }
+
+    // Trading Game Rooms and Personal Rooms
+    match /rooms/{roomId} {
+      allow get: if isSignedIn() && isValidId(roomId);
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) &&
+        incoming().participantIds is list &&
+        request.auth.uid in incoming().participantIds &&
+        (incoming().creatorUserId == request.auth.uid || incoming().hostId == request.auth.uid);
+      allow update: if isSignedIn() && isValidId(roomId) && isValidRoom(incoming()) && (
+        existing().creatorUserId == request.auth.uid ||
+        existing().hostId == request.auth.uid ||
+        isValidRoomJoin()
+      );
+      allow delete: if isSignedIn() && isValidId(roomId) && (existing().creatorUserId == request.auth.uid || existing().hostId == request.auth.uid);
+
+      match /shared/{stateId} {
+        allow get: if isValidId(roomId) && stateId == 'state' && isRoomParticipant(roomId);
+        allow list: if false;
+        allow create, update: if isValidId(roomId) &&
+          stateId == 'state' &&
+          isRoomParticipant(roomId) &&
+          incoming().updatedBy == request.auth.uid &&
+          incoming().writerId is string;
+        allow delete: if false;
+      }
+    }
+  }
+}

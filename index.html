@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#090b10" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="OPEN OUTCRY is a role-based real-time trading-floor simulation."
+    />
+    <title>OPEN OUTCRY | Exchange Terminal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="%BASE_URL%src/vanilla.css" />
+  </head>
+  <body>
+    <main id="app">
+      <div class="boot-screen">
+        <span class="brand-mark"></span>
+        <strong>OPEN OUTCRY</strong>
+        <span class="muted">Initializing exchange terminal…</span>
+      </div>
+    </main>
+    <noscript>
+      <p class="noscript">OPEN OUTCRY requires JavaScript. Enable it to use the exchange terminal.</p>
+    </noscript>
+    <script>
+      (() => {
+        const app = document.getElementById('app');
+        if (!app) return;
+
+        const showLoadError = () => {
+          if (!app.querySelector('.boot-screen')) return;
+          const message = document.createElement('p');
+          message.className = 'noscript';
+          message.setAttribute('role', 'alert');
+          message.textContent = 'The exchange terminal could not start. Run it with "npm run dev" and open the Vite URL; do not open index.html directly.';
+          app.replaceChildren(message);
+        };
+
+        const timeout = window.setTimeout(showLoadError, 15000);
+        window.addEventListener('error', (event) => {
+          const failedModule = event.target instanceof HTMLScriptElement &&
+            event.target.type === 'module';
+          if (failedModule && app.querySelector('.boot-screen')) {
+            window.clearTimeout(timeout);
+            showLoadError();
+          }
+        }, true);
+      })();
+    </script>
+    <script type="module" src="%BASE_URL%src/vanilla-main.js"></script>
+  </body>
+</html>

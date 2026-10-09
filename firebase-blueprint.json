@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with trader badge, credentials, and personal room count",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "username": { "type": "string", "maxLength": 100 },
+        "handle": { "type": "string", "maxLength": 10 },
+        "firm": { "type": "string", "maxLength": 100 },
+        "rolePreference": { "type": "string", "enum": ["OPERATOR", "BROKER", "TRADER", "PIT_OVERVIEW"] },
+        "avatarColor": { "type": "string", "maxLength": 20 },
+        "pin": { "type": "string", "maxLength": 20 },
+        "personalRoomsCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "username", "handle", "firm", "rolePreference"]
+    },
+    "GameRoom": {
+      "title": "GameRoom",
+      "description": "Trading room instance including personal rooms (max 30 participants)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "code": { "type": "string", "maxLength": 30 },
+        "name": { "type": "string", "maxLength": 100 },
+        "hostName": { "type": "string", "maxLength": 100 },
+        "hostId": { "type": "string", "maxLength": 128 },
+        "creatorUserId": { "type": "string", "maxLength": 128 },
+        "maxParticipants": { "type": "number" },
+        "currentParticipantsCount": { "type": "number" },
+        "startingCash": { "type": "number" },
+        "roundDurationMinutes": { "type": "number" },
+        "maxRounds": { "type": "number" },
+        "isPrivate": { "type": "boolean" },
+        "accessPassword": { "type": "string", "maxLength": 50 },
+        "scenarioPreset": { "type": "string", "maxLength": 50 },
+        "description": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["LOBBY", "TRADING", "PAUSED", "CLOSED"] },
+        "isPersonalRoom": { "type": "boolean" },
+        "defaultLimitedShares": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "code", "name", "hostName", "hostId", "maxParticipants", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profile document keyed by user authentication UID"
+    },
+    "/rooms/{roomId}": {
+      "schema": { "$ref": "#/entities/GameRoom" },
+      "description": "Trading game rooms and personal trading pits"
+    }
+  }
+}

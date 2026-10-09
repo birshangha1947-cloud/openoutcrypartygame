@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>OPEN OUTCRY | Standalone HTML</title>
+    <style>
+      :root {
+        --bg: #090b10;
+        --panel: rgba(15, 23, 42, 0.8);
+        --panel-strong: #111827;
+        --line: rgba(148, 163, 184, 0.25);
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --gold: #fbbf24;
+        --gold-soft: rgba(251, 191, 36, 0.16);
+        --green: #34d399;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        min-height: 100%;
+        background:
+          radial-gradient(circle at top, rgba(251, 191, 36, 0.12), transparent 35%),
+          linear-gradient(180deg, #090b10 0%, #0b1220 100%);
+        color: var(--text);
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .shell {
+        width: min(1100px, 100%);
+        border: 1px solid var(--line);
+        background: rgba(9, 11, 16, 0.88);
+        box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.08), 0 30px 80px rgba(0, 0, 0, 0.45);
+        overflow: hidden;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(11, 14, 20, 0.98);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        letter-spacing: 0.18em;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .brand-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--gold);
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.85);
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+        background: rgba(251, 191, 36, 0.08);
+        color: #fcd34d;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .content {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 0;
+      }
+
+      .hero {
+        padding: 48px 36px 36px;
+        border-right: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        color: var(--gold);
+        font-size: 0.78rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 5vw, 5rem);
+        line-height: 0.96;
+        letter-spacing: -0.06em;
+      }
+
+      .subtitle {
+        margin-top: 18px;
+        max-width: 620px;
+        font-size: 1.06rem;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .actions {
+        margin-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        appearance: none;
+        border: 1px solid var(--line);
+        background: var(--panel-strong);
+        color: var(--text);
+        padding: 14px 18px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        border-color: rgba(251, 191, 36, 0.5);
+      }
+
+      .primary {
+        background: linear-gradient(180deg, rgba(251, 191, 36, 0.22), rgba(251, 191, 36, 0.08));
+        border-color: rgba(251, 191, 36, 0.45);
+        color: #fef3c7;
+      }
+
+      .stats {
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(120px, 1fr));
+        gap: 14px;
+      }
+
+      .stat {
+        padding: 16px 14px;
+        border: 1px solid var(--line);
+        background: rgba(15, 23, 42, 0.5);
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+        color: var(--text);
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .panel {
+        padding: 28px 24px;
+        background: rgba(17, 24, 39, 0.72);
+      }
+
+      .card {
+        border: 1px solid var(--line);
+        background: rgba(15, 23, 42, 0.9);
+        padding: 18px;
+        margin-bottom: 16px;
+      }
+
+      .label {
+        color: var(--muted);
+        font-size: 0.72rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      .value {
+        font-size: clamp(1.6rem, 2vw, 2.3rem);
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .mini {
+        color: var(--green);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-top: 12px;
+      }
+
+      .list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 10px;
+      }
+
+      .list li {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        background: rgba(15, 23, 42, 0.6);
+        color: var(--muted);
+      }
+
+      .footer {
+        border-top: 1px solid var(--line);
+        padding: 14px 24px;
+        color: var(--muted);
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        background: rgba(11, 14, 20, 0.98);
+      }
+
+      @media (max-width: 860px) {
+        .content {
+          grid-template-columns: 1fr;
+        }
+
+        .hero {
+          border-right: none;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <span>OPEN OUTCRY</span>
+        </div>
+        <div class="status">Live Desk</div>
+      </header>
+
+      <main class="content">
+        <section class="hero">
+          <div class="eyebrow">Chicago Capital Markets</div>
+          <h1>Real-time trading floor simulation</h1>
+          <p class="subtitle">
+            A role-based market hub for operators, brokers, traders, and spectators. Monitor floor movement,
+            manage market conditions, and experience a high-pressure exchange environment in real time.
+          </p>
+
+          <div class="actions">
+            <button class="primary">Enter Market</button>
+            <button>View Room</button>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <strong id="volume">1.2M</strong>
+              <span>Volume</span>
+            </div>
+            <div class="stat">
+              <strong id="delta">+4.8%</strong>
+              <span>Delta</span>
+            </div>
+            <div class="stat">
+              <strong id="traders">143</strong>
+              <span>Traders</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="card">
+            <div class="label">Market pulse</div>
+            <div class="value" id="marketValue">$118.42</div>
+            <div class="mini">+0.76% today</div>
+          </div>
+
+          <div class="card">
+            <div class="label">Active Signals</div>
+            <ul class="list">
+              <li>Liquidity bias: Balanced</li>
+              <li>Sentiment: Risk-on</li>
+              <li>Macro shock: Low</li>
+            </ul>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        OPEN OUTCRY v1.2 · ROLE-BASED ACCESS CONTROL ACTIVE
+      </footer>
+    </div>
+
+    <script>
+      const volumeEl = document.getElementById('volume');
+      const deltaEl = document.getElementById('delta');
+      const tradersEl = document.getElementById('traders');
+      const marketValueEl = document.getElementById('marketValue');
+
+      const tick = () => {
+        const volume = (Math.random() * 1.4 + 1.0).toFixed(1);
+        const delta = (Math.random() * 6 - 1.2).toFixed(1);
+        const traders = Math.floor(Math.random() * 80 + 120);
+        const price = (118 + Math.random() * 8).toFixed(2);
+
+        volumeEl.textContent = `${volume}M`;
+        deltaEl.textContent = `${delta > 0 ? '+' : ''}${delta}%`;
+        tradersEl.textContent = traders;
+        marketValueEl.textContent = `$${price}`;
+      };
+
+      setInterval(tick, 1700);
+    </script>
+  </body>
+</html>

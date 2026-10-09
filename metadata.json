@@ -1,0 +1,6 @@
+{
+  "name": "OPEN OUTCRY",
+  "description": "Real-time market hub and trading floor simulation featuring Operator catastrophe controls, Broker margin desks, and Trader terminals with live order books, pacts, and secret roles.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
